@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12181f;
+    --surface:#1a222c;
+    --surface-2:#212b37;
+    --line:#2b3542;
+    --ink:#eae6da;
+    --muted:#7e8a9a;
+    --amber:#e8a33d;
+    --amber-dim:#8a642a;
+    --teal:#4f9d8f;
+    --danger:#c1554a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Space Grotesk',sans-serif;
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:24px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+  }
+  header h1{
+    font-size:20px;
+    font-weight:700;
+    letter-spacing:0.3px;
+    margin:0;
+  }
+  header .today{
+    font-size:13px;
+    color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px;
+    margin-bottom:18px;
+  }
+  .timer-display{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:56px;
+    font-weight:600;
+    text-align:center;
+    letter-spacing:2px;
+    color:var(--amber);
+    line-height:1;
+    margin-bottom:6px;
+    font-variant-numeric:tabular-nums;
+  }
+  .timer-sub{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    margin-bottom:20px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+  }
+  button{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    border:none;
+    border-radius:7px;
+    padding:11px 22px;
+    cursor:pointer;
+    transition:transform 0.08s ease, opacity 0.15s ease;
+  }
+  button:active{transform:scale(0.97);}
+  .btn-start{background:var(--amber);color:#1a1305;}
+  .btn-stop{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);}
+  .btn-reset{
+    background:transparent;
+    color:var(--danger);
+    border:1px solid var(--danger);
+    font-size:12px;
+    padding:6px 12px;
+  }
+  .section-title{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    color:var(--muted);
+    margin:0 0 14px 0;
+    font-weight:600;
+  }
+  /* 24hr ruler */
+  .ruler{
+    position:relative;
+    height:44px;
+    background:var(--surface-2);
+    border-radius:6px;
+    margin-bottom:8px;
+    overflow:hidden;
+  }
+  .ruler .block{
+    position:absolute;
+    top:6px;
+    height:32px;
+    background:var(--amber);
+    border-radius:3px;
+    opacity:0.9;
+  }
+  .ruler .now-tick{
+    position:absolute;
+    top:0;
+    width:2px;
+    height:44px;
+    background:var(--teal);
+  }
+  .ruler-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+    margin-bottom:18px;
+  }
+  .log-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .log-row:last-child{border-bottom:none;}
+  .log-row .range{color:var(--ink);}
+  .log-row .dur{color:var(--teal);font-weight:600;}
+  .empty-note{
+    color:var(--muted);
+    font-size:13px;
+    text-align:center;
+    padding:14px 0;
+    font-style:italic;
+  }
+  .history-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .history-row:last-child{border-bottom:none;}
+  .history-day{
+    width:92px;
+    flex-shrink:0;
+    font-size:13px;
+  }
+  .history-day .dname{font-weight:600;display:block;}
+  .history-day .ddate{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  .history-bar-wrap{
+    flex:1;
+    background:var(--surface-2);
+    border-radius:4px;
+    height:10px;
+    overflow:hidden;
+  }
+  .history-bar{
+    height:100%;
+    background:var(--teal);
+    border-radius:4px;
+  }
+  .history-total{
+    width:60px;
+    text-align:right;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--amber);
+    flex-shrink:0;
+  }
+  .card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .card-head .section-title{margin:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Study Log</h1>
+    <div class="today" id="todayLabel">--</div>
+  </header>
+
+  <div class="card">
+    <div class="timer-display" id="timerDisplay">00:00:00</div>
+    <div class="timer-sub" id="timerSub">today's total study time</div>
+    <div class="controls">
+      <button class="btn-start" id="startBtn">Start</button>
+      <button class="btn-stop" id="stopBtn" style="display:none;">Pause</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <p class="section-title">Today's timeline</p>
+      <button class="btn-reset" id="resetBtn">Reset today</button>
+    </div>
+    <div class="ruler" id="ruler"></div>
+    <div class="ruler-labels"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>12am</span></div>
+    <div id="sessionLog"></div>
+  </div>
+
+  <div class="card">
+    <p class="section-title">History</p>
+    <div id="historyLog"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'study-log-data';
+let data = { days: {}, activeSession: null };
+let tickInterval = null;
+
+function dateKey(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function dayName(d){ return d.toLocaleDateString('en-US',{weekday:'short'}); }
+function dateLabel(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function fmtClock(d){
+  let h=d.getHours(), m=String(d.getMinutes()).padStart(2,'0');
+  const ap = h>=12?'pm':'am';
+  h = h%12; if(h===0) h=12;
+  return `${h}:${m}${ap}`;
+}
+function fmtHMS(ms){
+  const s=Math.floor(ms/1000);
+  const hh=String(Math.floor(s/3600)).padStart(2,'0');
+  const mm=String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const ss=String(s%60).padStart(2,'0');
+  return `${hh}:${mm}:${ss}`;
+}
+function fmtHrMin(ms){
+  const mins=Math.round(ms/60000);
+  const h=Math.floor(mins/60), m=mins%60;
+  if(h===0) return `${m}m`;
+  if(m===0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+async function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      data = JSON.parse(raw);
+      if(!data.days) data.days = {};
+    }
+  }catch(e){
+    data = { days: {}, activeSession: null };
+  }
+}
+async function saveData(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }catch(e){
+    console.error('save failed', e);
+  }
+}
+
+function getTodayEntry(){
+  const key = dateKey(new Date());
+  if(!data.days[key]) data.days[key] = { sessions: [] };
+  return data.days[key];
+}
+
+function todaysAccumulatedMs(){
+  const entry = getTodayEntry();
+  let total = entry.sessions.reduce((sum,s)=>sum+s.durationMs,0);
+  if(data.activeSession){
+    total += (Date.now() - data.activeSession.startTs);
+  }
+  return total;
+}
+
+// Handle midnight rollover if a session is running across the day boundary
+function handleMidnightSplit(){
+  if(!data.activeSession) return;
+  const startDate = new Date(data.activeSession.startTs);
+  const now = new Date();
+  if(dateKey(startDate) !== dateKey(now)){
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0,0,0,0);
+    const oldKey = dateKey(startDate);
+    if(!data.days[oldKey]) data.days[oldKey] = { sessions: [] };
+    data.days[oldKey].sessions.push({
+      startTs: data.activeSession.startTs,
+      endTs: midnight.getTime(),
+      durationMs: midnight.getTime() - data.activeSession.startTs
+    });
+    data.activeSession = { startTs: midnight.getTime() };
+    saveData();
+  }
+}
+
+function render(){
+  const now = new Date();
+  document.getElementById('todayLabel').textContent = `${dayName(now)} · ${dateLabel(now)}`;
+
+  const totalMs = todaysAccumulatedMs();
+  document.getElementById('timerDisplay').textContent = fmtHMS(totalMs);
+
+  const running = !!data.activeSession;
+  document.getElementById('startBtn').style.display = running ? 'none' : 'inline-block';
+  document.getElementById('stopBtn').style.display = running ? 'inline-block' : 'none';
+  document.getElementById('timerSub').textContent = running ? "session running — today's total" : "today's total study time";
+
+  // ruler
+  const entry = getTodayEntry();
+  const ruler = document.getElementById('ruler');
+  ruler.innerHTML = '';
+  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(),0,0,0,0).getTime();
+  const dayMs = 24*3600*1000;
+  const blocks = [...entry.sessions];
+  if(data.activeSession) blocks.push({ startTs: data.activeSession.startTs, endTs: Date.now(), durationMs: Date.now()-data.activeSession.startTs });
+  blocks.forEach(s=>{
+    const left = ((s.startTs - dayStart)/dayMs)*100;
+    const width = Math.max((s.durationMs/dayMs)*100, 0.4);
+    const div = document.createElement('div');
+    div.className='block';
+    div.style.left = left+'%';
+    div.style.width = width+'%';
+    ruler.appendChild(div);
+  });
+  const tick = document.createElement('div');
+  tick.className='now-tick';
+  tick.style.left = (((Date.now()-dayStart)/dayMs)*100)+'%';
+  ruler.appendChild(tick);
+
+  // session log
+  const logEl = document.getElementById('sessionLog');
+  const allSessions = [...entry.sessions];
+  if(data.activeSession) allSessions.push({ startTs: data.activeSession.startTs, endTs: Date.now(), durationMs: Date.now()-data.activeSession.startTs, live:true });
+  if(allSessions.length===0){
+    logEl.innerHTML = '<div class="empty-note">No sessions logged yet today</div>';
+  } else {
+    logEl.innerHTML = allSessions.slice().reverse().map(s=>{
+      const st = fmtClock(new Date(s.startTs));
+      const en = s.live ? 'now' : fmtClock(new Date(s.endTs));
+      return `<div class="log-row"><span class="range">${st} – ${en}</span><span class="dur">${fmtHrMin(s.durationMs)}</span></div>`;
+    }).join('');
+  }
+
+  // history (last 14 days excluding today, most recent first)
+  const histEl = document.getElementById('historyLog');
+  const todayKey = dateKey(now);
+  const keys = Object.keys(data.days).filter(k=>k!==todayKey).sort().reverse().slice(0,14);
+  if(keys.length===0){
+    histEl.innerHTML = '<div class="empty-note">History will appear here after your first full day</div>';
+  } else {
+    const maxMs = Math.max(...keys.map(k=>data.days[k].sessions.reduce((s,x)=>s+x.durationMs,0)), 1);
+    histEl.innerHTML = keys.map(k=>{
+      const d = new Date(k+'T00:00:00');
+      const total = data.days[k].sessions.reduce((s,x)=>s+x.durationMs,0);
+      const pct = Math.max((total/maxMs)*100, 2);
+      return `<div class="history-row">
+        <div class="history-day"><span class="dname">${dayName(d)}</span><span class="ddate">${dateLabel(d)}</span></div>
+        <div class="history-bar-wrap"><div class="history-bar" style="width:${pct}%"></div></div>
+        <div class="history-total">${fmtHrMin(total)}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+async function start(){
+  if(data.activeSession) return;
+  handleMidnightSplit();
+  data.activeSession = { startTs: Date.now() };
+  await saveData();
+  render();
+}
+async function pause(){
+  if(!data.activeSession) return;
+  handleMidnightSplit();
+  if(data.activeSession){
+    const entry = getTodayEntry();
+    entry.sessions.push({
+      startTs: data.activeSession.startTs,
+      endTs: Date.now(),
+      durationMs: Date.now() - data.activeSession.startTs
+    });
+    data.activeSession = null;
+    await saveData();
+  }
+  render();
+}
+async function resetToday(){
+  if(!confirm("Reset all of today's logged time? This cannot be undone.")) return;
+  const key = dateKey(new Date());
+  data.days[key] = { sessions: [] };
+  data.activeSession = null;
+  await saveData();
+  render();
+}
+
+document.getElementById('startBtn').addEventListener('click', start);
+document.getElementById('stopBtn').addEventListener('click', pause);
+document.getElementById('resetBtn').addEventListener('click', resetToday);
+
+async function init(){
+  await loadData();
+  handleMidnightSplit();
+  render();
+  tickInterval = setInterval(()=>{
+    handleMidnightSplit();
+    render();
+  }, 1000);
+}
+init();
+</script>
+</body>
+</html>
